@@ -18,6 +18,58 @@ export interface AnalysisResponse {
   error?: string;
 }
 
+export interface ScoreBreakdown {
+  overall: number;
+  visual: number;
+  navigation: number;
+  usability: number;
+  accessibility: number;
+  mobile: number;
+  content: number;
+  conversion: number;
+  journey: number;
+}
+
+export interface DomainCharacteristics {
+  domainLength: number;
+  hasSubdomain: boolean;
+  isSecure: boolean;
+  hasPath: boolean;
+  pathDepth: number;
+  isEcommerce: boolean;
+  isSocial: boolean;
+  isBlog: boolean;
+  isSaaS: boolean;
+  isNews: boolean;
+  isTech: boolean;
+  isFinance: boolean;
+  domainComplexity: string;
+  urlComplexity: string;
+}
+
+interface Characteristics {
+  domainLength: number;
+  hasSubdomain: boolean;
+  isSecure: boolean;
+  hasPath: boolean;
+  pathDepth: number;
+  isEcommerce: boolean;
+  isSocial: boolean;
+  isBlog: boolean;
+  isSaaS: boolean;
+  isNews: boolean;
+  isTech: boolean;
+  isFinance: boolean;
+  domainComplexity: string;
+  urlComplexity: string;
+  urlLength?: number;
+  isPrototype?: boolean;
+  isDesign?: boolean;
+  isFile?: boolean;
+  fileCount?: number;
+  complexity?: string;
+}
+
 // Real analysis functions based on input characteristics
 const analyzeDomainCharacteristics = (domainUrl: string) => {
   try {
@@ -44,7 +96,7 @@ const analyzeDomainCharacteristics = (domainUrl: string) => {
     };
     
     return characteristics;
-  } catch (error) {
+  } catch {
     return {
       domainLength: 10,
       hasSubdomain: false,
@@ -65,7 +117,7 @@ const analyzeDomainCharacteristics = (domainUrl: string) => {
 };
 
 // Calculate genuine scores based on real characteristics
-const calculateGenuineScores = (characteristics: any, analysisType: string) => {
+const calculateGenuineScores = (characteristics: Characteristics): ScoreBreakdown => {
   const baseScores = {
     overall: 7.0,
     visual: 7.0,
@@ -106,7 +158,7 @@ const calculateGenuineScores = (characteristics: any, analysisType: string) => {
     baseScores.content += 0.3;
   }
 
-  if (characteristics.isBlog) {
+  if (characteristics.isBlog as boolean) {
     baseScores.content += 1.0;
     baseScores.content += 0.5; // Use content instead of readability
     baseScores.visual += 0.2;
@@ -139,7 +191,7 @@ const calculateGenuineScores = (characteristics: any, analysisType: string) => {
   }
 
   // Adjust for path depth
-  if (characteristics.pathDepth > 3) {
+  if ((characteristics.pathDepth as number) > 3) {
     baseScores.navigation -= 0.3;
     baseScores.journey -= 0.2;
   }
@@ -166,9 +218,9 @@ const calculateGenuineScores = (characteristics: any, analysisType: string) => {
 };
 
 // Generate genuine domain analysis based on real characteristics
-const generateGenuineDomainAnalysis = (domainUrl: string, scores: any) => {
+const generateGenuineDomainAnalysis = (domainUrl: string, scores: ScoreBreakdown): string => {
   const characteristics = analyzeDomainCharacteristics(domainUrl);
-  const domain = new URL(domainUrl).hostname;
+  // Domain extraction for analysis context - used in template literals
   
   // Determine industry focus based on real analysis
   let industryFocus = 'General Website';
@@ -409,7 +461,7 @@ ${recommendations.length > 0 ? recommendations.map((rec, i) => `${i + 1}. ${rec}
 };
 
 // Generate Figma analysis based on URL characteristics
-const generateGenuineFigmaAnalysis = (figmaUrl: string, scores: any) => {
+const generateGenuineFigmaAnalysis = (figmaUrl: string, scores: ScoreBreakdown): string => {
   const figmaId = figmaUrl.split('/').pop() || '';
   const isPrototype = figmaUrl.includes('/proto/');
   const isDesign = figmaUrl.includes('/design/');
@@ -553,7 +605,7 @@ const generateGenuineFigmaAnalysis = (figmaUrl: string, scores: any) => {
 };
 
 // Generate screenshot analysis based on file characteristics
-const generateGenuineScreenshotAnalysis = (fileCount: number, scores: any) => {
+const generateGenuineScreenshotAnalysis = (fileCount: number, scores: ScoreBreakdown): string => {
   const complexity = fileCount > 5 ? 'high' : fileCount > 2 ? 'medium' : 'low';
   
   return `
@@ -708,7 +760,7 @@ export async function generateAnalysis(request: AnalysisRequest): Promise<Analys
           throw new Error("Domain URL is required for domain analysis");
         }
         const domainCharacteristics = analyzeDomainCharacteristics(request.domainUrl);
-        scores = calculateGenuineScores(domainCharacteristics, request.analysisType);
+        scores = calculateGenuineScores(domainCharacteristics);
         analysis = generateGenuineDomainAnalysis(request.domainUrl, scores);
         break;
 
@@ -720,9 +772,24 @@ export async function generateAnalysis(request: AnalysisRequest): Promise<Analys
           urlLength: request.figmaUrl.length,
           isPrototype: request.figmaUrl.includes('/proto/'),
           isDesign: request.figmaUrl.includes('/design/'),
-          isFile: request.figmaUrl.includes('/file/')
+          isFile: request.figmaUrl.includes('/file/'),
+          // Default values for domain characteristics
+          domainLength: 10,
+          hasSubdomain: false,
+          isSecure: false,
+          hasPath: false,
+          pathDepth: 0,
+          isEcommerce: false,
+          isSocial: false,
+          isBlog: false,
+          isSaaS: false,
+          isNews: false,
+          isTech: false,
+          isFinance: false,
+          domainComplexity: 'medium',
+          urlComplexity: 'medium'
         };
-        scores = calculateGenuineScores(figmaCharacteristics, request.analysisType);
+        scores = calculateGenuineScores(figmaCharacteristics);
         analysis = generateGenuineFigmaAnalysis(request.figmaUrl, scores);
         break;
 
@@ -732,9 +799,24 @@ export async function generateAnalysis(request: AnalysisRequest): Promise<Analys
         }
         const screenshotCharacteristics = {
           fileCount: request.screenshotFiles.length,
-          complexity: request.screenshotFiles.length > 5 ? 'high' : request.screenshotFiles.length > 2 ? 'medium' : 'low'
+          complexity: request.screenshotFiles.length > 5 ? 'high' : request.screenshotFiles.length > 2 ? 'medium' : 'low',
+          // Default values for domain characteristics
+          domainLength: 10,
+          hasSubdomain: false,
+          isSecure: false,
+          hasPath: false,
+          pathDepth: 0,
+          isEcommerce: false,
+          isSocial: false,
+          isBlog: false,
+          isSaaS: false,
+          isNews: false,
+          isTech: false,
+          isFinance: false,
+          domainComplexity: 'medium',
+          urlComplexity: 'medium'
         };
-        scores = calculateGenuineScores(screenshotCharacteristics, request.analysisType);
+        scores = calculateGenuineScores(screenshotCharacteristics);
         analysis = generateGenuineScreenshotAnalysis(request.screenshotFiles.length, scores);
         break;
 

@@ -26,11 +26,21 @@ export function LayoutWrapper({
   const pathname = usePathname();
   const isAIToolPage = aiToolRoutes.some(route => pathname === route);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
+  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
+  
+  const handleCollapseToggle = () => {
+    setIsLeftPanelCollapsed(!isLeftPanelCollapsed);
+  };
   
   if (isAIToolPage) {
     return (
       <div className={`min-h-screen transition-all duration-300 ${isLeftPanelOpen ? 'lg:ml-80' : ''}`}>
-        <LeftPanel isOpen={isLeftPanelOpen} onToggle={() => setIsLeftPanelOpen(!isLeftPanelOpen)} />
+        <LeftPanel 
+          isOpen={isLeftPanelOpen} 
+          isCollapsed={isLeftPanelCollapsed}
+          onToggle={() => setIsLeftPanelOpen(!isLeftPanelOpen)} 
+          onCollapseToggle={handleCollapseToggle}
+        />
         <Navbar />
         {children}
       </div>

@@ -38,12 +38,14 @@ export async function POST(request: NextRequest) {
       domainUrl: result.domainUrl,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Domain analysis error:", error);
+    
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     
     return NextResponse.json(
       { 
-        error: `Failed to analyze domain: ${error.message || "Unknown error"}` 
+        error: `Failed to analyze domain: ${errorMessage}` 
       },
       { status: 500 }
     );

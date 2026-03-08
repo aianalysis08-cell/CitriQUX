@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Zap, Shield, Sparkles, Layers } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import { SECTION_SPACING, HERO_SPACING } from "@/config/spacing";
 
 export function Hero() {

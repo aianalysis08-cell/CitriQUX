@@ -42,12 +42,14 @@ export async function POST(request: NextRequest) {
       fileCount: result.fileCount,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Design analysis error:", error);
+    
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     
     return NextResponse.json(
       { 
-        error: `Failed to analyze design: ${error.message || "Unknown error"}` 
+        error: `Failed to analyze design: ${errorMessage}` 
       },
       { status: 500 }
     );
