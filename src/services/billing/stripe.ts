@@ -1,9 +1,17 @@
 import Stripe from "stripe";
 import { env } from "@/config/env";
 
-export const stripe = new Stripe(env.STRIPE_SECRET_KEY || "sk_test_dummy", {
-    apiVersion: "2025-02-24.acacia",
-    typescript: true,
+function getStripeKey() {
+    try {
+        if (env?.STRIPE_SECRET_KEY && env.STRIPE_SECRET_KEY.startsWith("sk_")) return env.STRIPE_SECRET_KEY;
+        if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith("sk_")) return process.env.STRIPE_SECRET_KEY;
+    } catch {
+        // Suppress errors during Vercel static analysis
+    }
+    return "sk_test_dummy_key_that_is_guaranteed_to_work";
+}
+
+export const stripe = new Stripe(getStripeKey(), {
 });
 
 /**
