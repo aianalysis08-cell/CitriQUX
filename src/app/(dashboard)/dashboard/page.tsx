@@ -1,22 +1,82 @@
 import React from "react";
 import { StatsCards } from "@/components/dashboard/StatsCards";
-import { Sparkles, ArrowRight, Play, History } from "lucide-react";
+import { RecentAnalyses } from "@/components/dashboard/RecentAnalyses";
+import { Sparkles, ArrowRight, Play, History, Bot, Palette, Activity } from "lucide-react";
 import Link from "next/link";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let totalProjects = 0;
+  let totalAnalyses = 0;
+  let creditsLeft = 10;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let recentAnalysesList: any[] = [];
+
+  if (user) {
+    // Fetch total projects
+    const { count: projectsCount } = await supabase
+      .from('projects')
+      .select('*', { count: 'exact', head: true })
+      .eq('owner_id', user.id);
+    totalProjects = projectsCount || 0;
+
+    // Fetch credits
+    const { data: creditsData } = await supabase
+      .from('credits')
+      .select('balance')
+      .eq('user_id', user.id)
+      .single();
+    if (creditsData) {
+      creditsLeft = creditsData.balance;
+    }
+
+    // We fetch analyses by looking up designs first, then analysis reports.
+    // For simplicity, we assume RLS policies allow us to query analysis_reports directly if we have access.
+    const { data: analysesData, count: analysesCount } = await supabase
+      .from('analysis_reports')
+      .select(`
+        id, 
+        design_id, 
+        analysis_type, 
+        ux_score, 
+        created_at,
+        designs (
+          projects (
+            title
+          )
+        )
+      `, { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    totalAnalyses = analysesCount || 0;
+    if (analysesData) {
+      recentAnalysesList = analysesData;
+    }
+  }
+
+  const quickTools = [
+    { name: "AI UX Copilot", icon: <Bot className="w-6 h-6" />, desc: "Chat with your AI UX expert", href: "/ai-ux-copilot" },
+    { name: "AI Redesign Engine", icon: <Palette className="w-6 h-6" />, desc: "Generate variations instantly", href: "/ai-redesign-engine" },
+    { name: "Conversion Simulator", icon: <Activity className="w-6 h-6" />, desc: "Predict uplift before coding", href: "/conversion-simulator" },
+  ];
+
   return (
     <div className="space-y-10">
       {/* Welcome Banner */}
-      <section className="relative glass-card p-10 rounded-[2.5rem] border border-white/10 overflow-hidden group">
+      <section className="relative apple-glass-card p-10 rounded-[2.5rem] overflow-hidden group">
         <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:opacity-40 transition-opacity">
           <Sparkles className="text-primary-400 w-32 h-32" />
         </div>
         <div className="relative z-10 max-w-2xl">
           <h1 className="text-4xl font-extrabold text-white mb-4">
-            Ready to <span className="gradient-text">Critique</span> your latest design?
+            Welcome back, <span className="gradient-text">{user?.user_metadata?.name || 'Designer'}</span> 👋
           </h1>
           <p className="text-white/50 text-lg mb-8">
-            Upload a screenshot or paste a link to get instant, expert AI feedback based on over 200+ UX heuristics.
+            Select a project or paste a new link to get instant, expert AI feedback based on over 200+ UX heuristics.
           </p>
           <div className="flex flex-wrap items-center gap-4">
             <Link
@@ -28,7 +88,7 @@ export default function DashboardPage() {
             </Link>
             <Link
               href="/analyses"
-              className="flex items-center gap-2 px-6 py-3.5 rounded-2xl glass hover:bg-white/5 text-white font-bold border-white/10 transition-all"
+              className="flex items-center gap-2 px-6 py-3.5 rounded-2xl apple-glass hover:bg-white/5 text-white font-bold transition-all"
             >
               View Recent Reports
               <History className="w-4 h-4" />
@@ -41,51 +101,39 @@ export default function DashboardPage() {
       <section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Performance <span className="text-white/20">Snapshot</span>
+            📊 Performance <span className="text-white/20">Snapshot</span>
           </h2>
-          <button className="text-xs font-bold text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors">
+          <Link href="/analyses" className="text-xs font-bold text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors">
             View Analytics <ArrowRight className="w-3 h-3" />
-          </button>
+          </Link>
         </div>
-        <StatsCards />
+        <StatsCards
+          totalProjects={totalProjects}
+          totalAnalyses={totalAnalyses}
+          creditsLeft={creditsLeft}
+        />
       </section>
 
       {/* Recent Activity Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
         <div className="lg:col-span-2 space-y-6">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Recent <span className="text-white/20">Analyses</span>
+            🕰️ Recent <span className="text-white/20">Analyses</span>
           </h2>
-          <div className="glass rounded-[2rem] border border-white/5 overflow-hidden">
-            <div className="p-12 text-center">
-              <div className="w-20 h-20 rounded-2xl bg-white/5 mx-auto mb-6 flex items-center justify-center">
-                <History className="text-white/20 w-10 h-10" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">No Reports Yet</h3>
-              <p className="text-white/40 text-sm mb-8 max-w-xs mx-auto">
-                Upload your first design to get a comprehensive UX audit and see it here.
-              </p>
-              <Link
-                href="/projects"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl gradient-primary text-white font-bold text-sm"
-              >
-                Upload Now
-              </Link>
-            </div>
-          </div>
+          <RecentAnalyses analyses={recentAnalysesList} />
         </div>
 
         <div className="space-y-6">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Quick <span className="text-white/20">Tools</span>
+            ⚡ Quick <span className="text-white/20">Tools</span>
           </h2>
           <div className="grid grid-cols-1 gap-4">
-            {[
-              { name: "A/B Comparison", icon: "AB", desc: "Test two variants side-by-side" },
-              { name: "Token Extraction", icon: "TK", desc: "Get design tokens from any URL" },
-              { name: "User Stories", icon: "US", desc: "Generate PM requirements" },
-            ].map((tool) => (
-              <div key={tool.name} className="glass-card p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-all flex items-center gap-4 group cursor-pointer">
+            {quickTools.map((tool) => (
+              <Link
+                href={tool.href}
+                key={tool.name}
+                className="apple-glass-card p-4 rounded-2xl transition-all flex items-center gap-4 group cursor-pointer"
+              >
                 <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center font-bold text-white shadow-lg">
                   {tool.icon}
                 </div>
@@ -93,7 +141,7 @@ export default function DashboardPage() {
                   <h4 className="text-sm font-bold text-white group-hover:text-primary-400 transition-colors">{tool.name}</h4>
                   <p className="text-[10px] text-white/40">{tool.desc}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

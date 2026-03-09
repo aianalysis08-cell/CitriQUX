@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json(
-    { message: "Account created. Please check your email to confirm.", user: data.user },
+    { message: "Account created successfully.", user: data.user, session: data.session },
     { status: 201 }
   );
 }

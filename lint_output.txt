@@ -1,0 +1,106 @@
+
+> critiqux@1.0.0 lint
+> next lint
+
+
+./src/app/(dashboard)/ux-benchmark/[id]/page.tsx
+6:31  Error: 'BenchmarkResult' is defined but never used.  @typescript-eslint/no-unused-vars
+45:56  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+46:57  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+157:101  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/(dashboard)/ux-benchmark/page.tsx
+53:58  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:55  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+145:45  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+213:101  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/benchmark/route.ts
+184:29  Error: 'error' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+320:37  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+321:67  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+322:50  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+323:62  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+324:55  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/api/heatmap/route.ts
+5:8  Error: 'OpenAI' is defined but never used.  @typescript-eslint/no-unused-vars
+26:10  Error: 'buildHeatmapSystemPrompt' is defined but never used.  @typescript-eslint/no-unused-vars
+126:33  Error: 'error' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+225:58  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+226:41  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/benchmark/AIStrategicInsight.tsx
+6:10  Error: 'cn' is defined but never used.  @typescript-eslint/no-unused-vars
+14:61  Error: 'competitorLabels' is defined but never used.  @typescript-eslint/no-unused-vars
+80:25  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+80:56  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+186:29  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+186:53  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+
+./src/components/benchmark/BenchmarkInput.tsx
+177:41  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+229:49  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/benchmark/BenchmarkTabs.tsx
+13:54  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/components/benchmark/CategoryBreakdown.tsx
+16:71  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+42:11  Error: 'ownSite' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+63:41  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+134:49  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/benchmark/ExportReport.tsx
+4:39  Error: 'Check' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/benchmark/GapAnalysis.tsx
+13:44  Error: 'ownSiteLabel' is defined but never used.  @typescript-eslint/no-unused-vars
+135:41  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+135:62  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+
+./src/components/benchmark/HeadToHead.tsx
+38:9  Error: 'ties' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+85:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+97:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+170:29  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+175:29  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+175:52  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+
+./src/components/benchmark/OpportunityRadar.tsx
+34:99  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+63:37  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+63:55  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+
+./src/components/benchmark/RadarChart.tsx
+46:26  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+53:56  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+59:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+102:48  Error: 'entry' is defined but never used.  @typescript-eslint/no-unused-vars
+102:55  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+107:45  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/benchmark/RankingTable.tsx
+70:45  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/benchmark/SiteScoreCard.tsx
+33:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+90:82  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+90:96  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+
+./src/components/heatmap/HeatmapAnnotator.tsx
+8:5  Error: 'AnnotationSeverity' is defined but never used.  @typescript-eslint/no-unused-vars
+84:50  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+95:23  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+209:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+338:83  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+340:66  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+399:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/layout/LayoutWrapper.tsx
+6:10  Error: 'Navbar' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/layout/Navbar.tsx
+23:11  Error: 'handleScroll' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules

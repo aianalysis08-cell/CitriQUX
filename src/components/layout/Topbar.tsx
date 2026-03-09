@@ -17,7 +17,7 @@ export function Topbar() {
   };
 
   return (
-    <header className="fixed top-0 right-0 left-0 lg:left-64 h-16 glass border-b border-white/5 z-20 px-4 flex items-center justify-between">
+    <header className="fixed top-0 right-0 left-0 lg:left-64 h-16 apple-glass border-b border-white/5 z-20 px-4 flex items-center justify-between">
       {/* Search Bar */}
       <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full w-96 group focus-within:ring-2 focus-within:ring-primary-500/50 transition-all">
         <Search className="text-white/30 w-4 h-4 group-focus-within:text-primary-400" />
@@ -60,7 +60,7 @@ export function Topbar() {
           </div>
 
           {/* User Menu Dropdown (Simplified for now) */}
-          <div className="absolute top-full right-0 mt-2 w-48 glass-strong rounded-2xl border border-white/10 p-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all shadow-2xl">
+          <div className="absolute top-full right-0 mt-2 w-48 apple-glass rounded-2xl border border-white/10 p-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all shadow-2xl">
             <button className="w-full flex items-center gap-3 p-3 rounded-xl text-white/50 hover:text-white hover:bg-white/5 transition-all text-xs font-medium">
               <UserIcon className="w-4 h-4" />
               Profile Settings

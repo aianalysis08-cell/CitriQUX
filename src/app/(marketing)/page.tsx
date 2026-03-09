@@ -1,57 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Navbar } from "@/components/layout/Navbar";
-import { LeftPanel } from "@/components/layout/LeftPanel";
+import React from "react";
 import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
 import { Pricing } from "@/components/landing/Pricing";
 import { SECTION_SPACING } from "@/config/spacing";
 
 export default function LandingPage() {
-  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
-  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const scrollThreshold = 100; // Collapse after scrolling 100px
-      
-      // Collapse panel when scrolling down, expand when scrolling up
-      if (currentScrollY > scrollThreshold) {
-        if (currentScrollY > lastScrollY && !isLeftPanelCollapsed) {
-          // Scrolling down
-          setIsLeftPanelCollapsed(true);
-        } else if (currentScrollY < lastScrollY && isLeftPanelCollapsed) {
-          // Scrolling up
-          setIsLeftPanelCollapsed(false);
-        }
-      } else if (currentScrollY < 50 && isLeftPanelCollapsed) {
-        // Near top - expand panel
-        setIsLeftPanelCollapsed(false);
-      }
-      
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY, isLeftPanelCollapsed]);
-
-  const handleCollapseToggle = () => {
-    setIsLeftPanelCollapsed(!isLeftPanelCollapsed);
-  };
-
   return (
-    <main className={`min-h-screen transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isLeftPanelOpen && !isLeftPanelCollapsed ? 'lg:ml-80' : isLeftPanelOpen && isLeftPanelCollapsed ? 'lg:ml-16' : ''}`}>
-      <LeftPanel 
-        isOpen={isLeftPanelOpen} 
-        isCollapsed={isLeftPanelCollapsed}
-        onToggle={() => setIsLeftPanelOpen(!isLeftPanelOpen)} 
-        onCollapseToggle={handleCollapseToggle}
-      />
-      <Navbar />
+    <>
       <Hero />
       <Features />
 
@@ -102,6 +59,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-    </main>
+    </>
   );
 }

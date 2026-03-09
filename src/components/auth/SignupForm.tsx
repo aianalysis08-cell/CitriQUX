@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Loader2, ArrowRight, Layers, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, User, Loader2, ArrowRight, Layers, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema } from "@/schemas";
@@ -17,12 +17,10 @@ export function SignupForm() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [isSuccess, setIsSuccess] = useState(false);
 
     const {
         register,
         handleSubmit,
-        getValues,
         formState: { errors },
     } = useForm<SignupFormValues>({
         resolver: zodResolver(signupSchema),
@@ -45,39 +43,17 @@ export function SignupForm() {
                 throw new Error(result.error || "Signup failed");
             }
 
-            setIsSuccess(true);
+            if (result.session) {
+                router.push("/dashboard");
+            } else {
+                router.push("/login?message=Account+created.+Please+log+in.");
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred");
         } finally {
             setIsLoading(false);
         }
     };
-
-    if (isSuccess) {
-        return (
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-md text-center"
-            >
-                <div className="glass-card p-10 rounded-[2rem] border border-white/10 shadow-2xl">
-                    <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center text-success mx-auto mb-6">
-                        <CheckCircle2 className="w-10 h-10" />
-                    </div>
-                    <h2 className="text-3xl font-bold text-white mb-4">Check Your Email</h2>
-                    <p className="text-white/60 mb-8 leading-relaxed">
-                        Check your email. We&apos;ve sent a magic link to {getValues("email")} to verify your account. Please click the link to confirm your account and start critiquing.
-                    </p>
-                    <button
-                        onClick={() => router.push("/login")}
-                        className="w-full py-4 rounded-2xl glass hover:bg-white/5 text-white font-bold text-lg border-white/10 transition-all"
-                    >
-                        Back to Login
-                    </button>
-                </div>
-            </motion.div>
-        );
-    }
 
     return (
         <motion.div
