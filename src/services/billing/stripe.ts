@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { env } from "@/config/env";
 
-export const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
+export const stripe = new Stripe(env.STRIPE_SECRET_KEY || "sk_test_dummy", {
     apiVersion: "2025-02-24.acacia",
     typescript: true,
 });
