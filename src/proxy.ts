@@ -23,7 +23,7 @@ const PUBLIC_PATHS = [
 ];
 const AUTH_PATHS = ["/login", "/signup", "/forgot-password"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Allow public paths, API routes, static files
