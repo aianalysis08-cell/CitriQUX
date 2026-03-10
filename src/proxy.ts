@@ -44,13 +44,16 @@ export async function proxy(request: NextRequest) {
     // Rate Limiting for all API routes
     if (pathname.startsWith("/api/")) {
         const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
-        const { success } = await generalApiLimiter.limit(ip);
-
-        if (!success) {
-            return NextResponse.json(
-                { error: "Too Many Requests" },
-                { status: 429 }
-            );
+        try {
+            const { success } = await generalApiLimiter.limit(ip);
+            if (!success) {
+                return NextResponse.json(
+                    { error: "Too Many Requests" },
+                    { status: 429 }
+                );
+            }
+        } catch (e) {
+            // Safely bypass if Upstash Redis variables are missing on Vercel
         }
     }
 
@@ -64,11 +67,15 @@ export async function proxy(request: NextRequest) {
                 },
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setAll(cookiesToSet: any[]) {
-                    cookiesToSet.forEach(({ name, value, options }) => {
+                    cookiesToSet.forEach(({ name, value }) => {
                         request.cookies.set(name, value);
-                        response = NextResponse.next({
-                            request: { headers: request.headers },
-                        });
+                    });
+
+                    response = NextResponse.next({
+                        request: { headers: request.headers },
+                    });
+
+                    cookiesToSet.forEach(({ name, value, options }) => {
                         response.cookies.set(name, value, options);
                     });
                 },

@@ -3,10 +3,9 @@ import { Redis } from "@upstash/redis/cloudflare";
 
 const _isBuildProcess = process.env.npm_lifecycle_event === "build" || process.env.NEXT_PHASE === "phase-production-build" || process.env.CI;
 
-// Initialize Redis client 
 const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL || (_isBuildProcess ? "https://dummy.upstash.io" : ""),
-    token: process.env.UPSTASH_REDIS_REST_TOKEN || (_isBuildProcess ? "dummy_token" : ""),
+    url: process.env.UPSTASH_REDIS_REST_URL || "https://dummy.upstash.io",
+    token: process.env.UPSTASH_REDIS_REST_TOKEN || "dummy_token",
 });
 
 /**
