@@ -1,20 +1,27 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client with proper service role key
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
+// Initialize Supabase client with proper service role key (lazy initialization)
+function getSupabaseClient() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase environment variables are not configured');
   }
-);
+  
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  );
+}
 
 // Test Supabase connection
 export async function testSupabaseConnection(): Promise<boolean> {
   try {
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase.storage.listBuckets();
     if (error) {
       console.error('Supabase connection test failed:', error);
@@ -47,6 +54,8 @@ export async function uploadImageToSupabase(file: File, folder: string = 'ux-ana
     if (!isConnected) {
       throw new Error('Cannot connect to Supabase. Please check your credentials and bucket permissions.');
     }
+    
+    const supabase = getSupabaseClient();
     
     // Sanitize filename more aggressively
     const sanitizedName = file.name
@@ -84,7 +93,7 @@ export async function uploadImageToSupabase(file: File, folder: string = 'ux-ana
     
     try {
       // Method 1: Standard public URL
-      const { data: urlData } = supabase.storage
+      const { data: urlData } = await supabase.storage
         .from('design-uploads')
         .getPublicUrl(fileName);
       publicUrl = urlData.publicUrl;
