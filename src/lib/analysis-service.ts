@@ -76,7 +76,7 @@ const analyzeDomainCharacteristics = (domainUrl: string) => {
     const url = new URL(domainUrl);
     const domain = url.hostname;
     const path = url.pathname;
-    
+
     // Analyze domain characteristics
     const characteristics = {
       domainLength: domain.length,
@@ -94,7 +94,7 @@ const analyzeDomainCharacteristics = (domainUrl: string) => {
       domainComplexity: domain.length > 15 ? 'high' : domain.length > 10 ? 'medium' : 'low',
       urlComplexity: (domain + path).length > 30 ? 'high' : (domain + path).length > 20 ? 'medium' : 'low'
     };
-    
+
     return characteristics;
   } catch {
     return {
@@ -221,11 +221,11 @@ const calculateGenuineScores = (characteristics: Characteristics): ScoreBreakdow
 const generateGenuineDomainAnalysis = (domainUrl: string, scores: ScoreBreakdown): string => {
   const characteristics = analyzeDomainCharacteristics(domainUrl);
   // Domain extraction for analysis context - used in template literals
-  
+
   // Determine industry focus based on real analysis
   let industryFocus = 'General Website';
   let industrySpecificInsights = '';
-  
+
   if (characteristics.isEcommerce) {
     industryFocus = 'E-commerce Platform';
     industrySpecificInsights = `
@@ -290,28 +290,28 @@ const generateGenuineDomainAnalysis = (domainUrl: string, scores: ScoreBreakdown
 
   // Generate specific recommendations based on characteristics
   const recommendations = [];
-  
+
   if (!characteristics.isSecure) {
     recommendations.push('Implement HTTPS encryption for security and trust');
     recommendations.push('Add SSL certificate to improve SEO and user confidence');
   }
-  
+
   if (characteristics.domainComplexity === 'high') {
     recommendations.push('Consider domain simplification for better memorability');
     recommendations.push('Implement subdomain strategy for better organization');
   }
-  
+
   if (characteristics.pathDepth > 3) {
     recommendations.push('Flatten URL structure for better navigation');
     recommendations.push('Implement breadcrumb navigation for deep content');
   }
-  
+
   if (characteristics.isEcommerce) {
     recommendations.push('Optimize product page loading speed');
     recommendations.push('Implement one-page checkout process');
     recommendations.push('Add customer reviews and social proof');
   }
-  
+
   if (characteristics.hasPath) {
     recommendations.push('Optimize mobile checkout process');
     recommendations.push('Implement progressive web app features');
@@ -466,9 +466,9 @@ const generateGenuineFigmaAnalysis = (figmaUrl: string, scores: ScoreBreakdown):
   const isPrototype = figmaUrl.includes('/proto/');
   const isDesign = figmaUrl.includes('/design/');
   const isFile = figmaUrl.includes('/file/');
-  
+
   const complexity = figmaId.length > 20 ? 'high' : figmaId.length > 10 ? 'medium' : 'low';
-  
+
   return `
 # Figma Design Analysis for ${figmaUrl}
 
@@ -607,7 +607,7 @@ const generateGenuineFigmaAnalysis = (figmaUrl: string, scores: ScoreBreakdown):
 // Generate screenshot analysis based on file characteristics
 const generateGenuineScreenshotAnalysis = (fileCount: number, scores: ScoreBreakdown): string => {
   const complexity = fileCount > 5 ? 'high' : fileCount > 2 ? 'medium' : 'low';
-  
+
   return `
 # Screenshot Analysis (${fileCount} images)
 
@@ -843,22 +843,56 @@ export async function generateAnalysis(request: AnalysisRequest): Promise<Analys
   }
 }
 
+import OpenAI from "openai";
+
 // Future migration helper - this function can be easily swapped
 export async function getAnalysis(request: AnalysisRequest): Promise<AnalysisResponse> {
-  // Currently using free API
-  return await generateAnalysis(request);
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
 
-  // Future OpenAI/Gemini implementation:
-  /*
-  if (process.env.OPENAI_API_KEY && request.analysisType === "domain") {
-    return await openaiAnalysis(request);
+      let prompt = "";
+      if (request.analysisType === "domain") {
+        prompt = `Analyze the UX/UI of the following website domain: ${request.domainUrl}\nProvide a comprehensive UX audit with scores (out of 10) and priority recommendations.`;
+      } else if (request.analysisType === "figma") {
+        prompt = `Analyze the UX/UI of the following Figma design URL: ${request.figmaUrl}\nProvide a comprehensive UX audit with scores (out of 10) and priority recommendations.`;
+      } else if (request.analysisType === "screenshots") {
+        prompt = `Analyze the UX/UI based on the attached ${request.screenshotFiles?.length} screenshots.\nProvide a comprehensive UX audit with scores (out of 10) and priority recommendations.`;
+      }
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4.5-preview",
+        messages: [
+          {
+            role: "system",
+            content: "You are an elite UX/UI expert and creative director offering comprehensive, Apple-grade design audits. Provide detailed analysis, including an Overall Assessment score, detailed reviews for visual design, navigation, usability, accessibility, mobile responsiveness, and list Priority Recommendations (High, Medium, Low). Format response in clean Markdown with appropriate headings.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+      });
+
+      const analysisOutput = response.choices[0].message?.content || "";
+
+      return {
+        success: true,
+        analysis: analysisOutput,
+        provider: "openai",
+        domainUrl: request.domainUrl,
+        figmaUrl: request.figmaUrl,
+        fileCount: request.screenshotFiles?.length,
+      };
+    } catch (error) {
+      console.error("OpenAI analysis failed, falling back to free API:", error);
+      return await generateAnalysis(request);
+    }
   }
-  
-  if (process.env.GEMINI_API_KEY && (request.analysisType === "figma" || request.analysisType === "screenshots")) {
-    return await geminiAnalysis(request);
-  }
-  
+
   // Fallback to free API
   return await generateAnalysis(request);
-  */
 }

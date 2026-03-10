@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAnalysis, AnalysisRequest } from "@/lib/analysis-service";
+import { analyzeUX, UXAnalysisRequest } from "@/services/openai-ux-analysis";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,15 +12,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("Analyzing domain:", domainUrl);
+    console.log("Analyzing domain with OpenAI:", domainUrl);
 
-    // Use the analysis service (currently free API, can be migrated to OpenAI)
-    const analysisRequest: AnalysisRequest = {
+    // Use OpenAI for domain analysis
+    const analysisRequest: UXAnalysisRequest = {
+      type: 'domain',
       domainUrl,
-      analysisType: "domain",
     };
 
-    const result = await getAnalysis(analysisRequest);
+    const result = await analyzeUX(analysisRequest);
 
     if (!result.success) {
       return NextResponse.json(
@@ -29,13 +29,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("Domain analysis completed successfully");
+    console.log("Domain analysis completed successfully with OpenAI");
 
     return NextResponse.json({
       success: true,
       analysis: result.analysis,
       provider: result.provider,
-      domainUrl: result.domainUrl,
+      domainUrl: domainUrl,
+      scores: result.scores,
     });
 
   } catch (error: unknown) {

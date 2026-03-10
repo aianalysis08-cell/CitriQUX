@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAnalysis, AnalysisRequest } from "@/lib/analysis-service";
+import { analyzeUX, UXAnalysisRequest } from "@/services/openai-ux-analysis";
 
 export async function POST(request: NextRequest) {
   try {
-    const { figmaUrl, screenshotFiles } = await request.json();
+    const formData = await request.formData();
+    const figmaUrl = formData.get('figmaUrl') as string;
+    const files = formData.getAll('files') as File[];
 
-    if (!figmaUrl && (!screenshotFiles || screenshotFiles.length === 0)) {
+    if (!figmaUrl && (!files || files.length === 0)) {
       return NextResponse.json(
         { error: "Either Figma URL or screenshot files are required" },
         { status: 400 }
@@ -14,16 +16,16 @@ export async function POST(request: NextRequest) {
 
     const analysisType = figmaUrl ? "figma" : "screenshots";
     
-    console.log("Analyzing:", figmaUrl ? "Figma design" : `${screenshotFiles?.length} screenshots`);
+    console.log("Analyzing with OpenAI:", figmaUrl ? "Figma design" : `${files.length} screenshots`);
 
-    // Use the analysis service (currently free API, can be migrated to Gemini)
-    const analysisRequest: AnalysisRequest = {
+    // Use OpenAI for design analysis
+    const analysisRequest: UXAnalysisRequest = {
+      type: analysisType,
       figmaUrl: figmaUrl || undefined,
-      screenshotFiles: screenshotFiles || [],
-      analysisType,
+      files: files.length > 0 ? files : undefined,
     };
 
-    const result = await getAnalysis(analysisRequest);
+    const result = await analyzeUX(analysisRequest);
 
     if (!result.success) {
       return NextResponse.json(
@@ -32,14 +34,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("Design analysis completed successfully");
+    console.log("Design analysis completed successfully with OpenAI");
 
     return NextResponse.json({
       success: true,
       analysis: result.analysis,
       provider: result.provider,
-      figmaUrl: result.figmaUrl,
-      fileCount: result.fileCount,
+      figmaUrl: figmaUrl || undefined,
+      fileCount: files.length,
+      scores: result.scores,
     });
 
   } catch (error: unknown) {

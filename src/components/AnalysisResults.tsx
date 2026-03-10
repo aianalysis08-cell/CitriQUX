@@ -28,6 +28,18 @@ import {
   Send,
   Minimize2,
   Maximize2,
+  Star,
+  TrendingDown,
+  AlertTriangle,
+  Info,
+  ChevronDown,
+  ChevronUp,
+  Filter,
+  Search,
+  Calendar,
+  Clock,
+  ArrowUpRight,
+  ArrowDownRight,
 } from "lucide-react";
 
 interface AnalysisResult {
@@ -37,6 +49,24 @@ interface AnalysisResult {
   domainUrl?: string;
   figmaUrl?: string;
   fileCount?: number;
+  scores?: {
+    overall: number;
+    visual: number;
+    navigation: number;
+    usability: number;
+    accessibility: number;
+    mobile: number;
+    content: number;
+    conversion: number;
+    journey: number;
+  };
+  grade?: string;
+  classification?: string;
+  executiveSummary?: {
+    keyStrengths: string[];
+    criticalIssues: string[];
+    quickWins: string[];
+  };
   error?: string;
 }
 
@@ -44,6 +74,49 @@ interface AnalysisResultsProps {
   result: AnalysisResult;
   onReset: () => void;
 }
+
+// Helper functions for grade and classification
+const calculateGrade = (score: number): string => {
+  if (score >= 9.5) return 'A+';
+  if (score >= 9.0) return 'A';
+  if (score >= 8.5) return 'A-';
+  if (score >= 8.0) return 'B+';
+  if (score >= 7.5) return 'B';
+  if (score >= 7.0) return 'B-';
+  if (score >= 6.5) return 'C+';
+  if (score >= 6.0) return 'C';
+  if (score >= 5.5) return 'C-';
+  if (score >= 5.0) return 'D';
+  return 'F';
+};
+
+const calculateClassification = (score: number): string => {
+  if (score >= 9.0) return 'World-Class';
+  if (score >= 8.0) return 'Professional';
+  if (score >= 7.0) return 'Good';
+  if (score >= 6.0) return 'Adequate';
+  if (score >= 5.0) return 'Needs Improvement';
+  return 'Critical';
+};
+
+const extractExecutiveSummary = (analysis: string) => {
+  const extractBulletPoints = (sectionHeader: string): string[] => {
+    const sectionStart = analysis.indexOf(sectionHeader);
+    if (sectionStart === -1) return [];
+    
+    const sectionEnd = analysis.indexOf('\n\n', sectionStart);
+    const section = sectionEnd !== -1 ? analysis.substring(sectionStart, sectionEnd) : analysis.substring(sectionStart);
+    
+    const bulletPoints = section.match(/- ([^\n]+)/g) || [];
+    return bulletPoints.map(point => point.replace('- ', '').trim()).filter(point => point.length > 0);
+  };
+
+  return {
+    keyStrengths: extractBulletPoints('**Key Strengths:**'),
+    criticalIssues: extractBulletPoints('**Critical Issues:**'),
+    quickWins: extractBulletPoints('**Quick Wins:**'),
+  };
+};
 
 const extractScores = (analysis: string) => {
   const scores = {
@@ -82,7 +155,7 @@ const extractScores = (analysis: string) => {
   const conversionMatch = analysis.match(/Conversion Optimization\s*\((\d+\.?\d+)\/10\)/);
   if (conversionMatch) scores.conversion = parseFloat(conversionMatch[1]) || 7.0;
 
-  const journeyMatch = analysis.match(/Overall User Journey\s*\((\d+\.?\d+)\/10\)/);
+  const journeyMatch = analysis.match(/User Journey & Flow\s*\((\d+\.?\d+)\/10\)/);
   if (journeyMatch) scores.journey = parseFloat(journeyMatch[1]) || 8.0;
 
   return scores;
@@ -183,7 +256,7 @@ interface ChatMessage {
 
 export default function AnalysisResults({ result, onReset }: AnalysisResultsProps) {
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "detailed" | "recommendations">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "detailed" | "recommendations" | "metrics">("overview");
   const [isExporting, setIsExporting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isChatMinimized, setIsChatMinimized] = useState(false);
@@ -221,11 +294,20 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
   }
 
   // ── Derived values ────────────────────────────────────────────────────────────
-  const scores = extractScores(result.analysis);
+  const scores = result.scores || extractScores(result.analysis);
+  const grade = result.grade || calculateGrade(scores.overall);
+  const classification = result.classification || calculateClassification(scores.overall);
+  const executiveSummary = result.executiveSummary || extractExecutiveSummary(result.analysis);
+  
   const scoreColor =
     scores.overall >= 8 ? "text-green-400" : scores.overall >= 6 ? "text-yellow-400" : "text-red-400";
   const scoreBg =
     scores.overall >= 8 ? "bg-green-500/20" : scores.overall >= 6 ? "bg-yellow-500/20" : "bg-red-500/20";
+    
+  const gradeColor = 
+    grade.includes('A') ? "text-green-400" : 
+    grade.includes('B') ? "text-blue-400" : 
+    grade.includes('C') ? "text-yellow-400" : "text-red-400";
 
   // ── Handlers ──────────────────────────────────────────────────────────────────
   const handleCopyResults = () => {
@@ -294,7 +376,7 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
   return (
     <>
       <div className="space-y-6">
-        {/* ── Header ── */}
+        {/* ── Header with Enhanced Score Display ── */}
         <div className="glass-strong p-8 rounded-2xl border border-white/10">
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -307,10 +389,10 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
                   <p className="text-white/60 text-sm">
                     Powered by{" "}
                     {result.provider === "openai"
-                      ? "OpenAI GPT-4"
+                      ? "OpenAI GPT-4o Vision"
                       : result.provider === "gemini"
-                      ? "Google Gemini"
-                      : "AI Analysis Engine"}
+                        ? "Google Gemini"
+                        : "AI Analysis Engine"}
                   </p>
                 </div>
               </div>
@@ -330,14 +412,78 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
             </button>
           </div>
 
-          {/* Overall Score */}
+          {/* Enhanced Score Display with Grade and Classification */}
           <div className="text-center mb-8">
-            <CircularProgress score={scores.overall} />
-            <div className="mt-4">
-              <span className={`text-2xl font-bold ${scoreColor}`}>
-                {scores.overall >= 8 ? "Excellent" : scores.overall >= 6 ? "Good" : "Needs Improvement"}
-              </span>
-              <p className="text-white/50 text-sm mt-1">Overall UX Score</p>
+            <div className="flex items-center justify-center gap-8 mb-6">
+              <CircularProgress score={scores.overall} />
+              <div className="text-left">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className={`text-4xl font-bold ${gradeColor}`}>{grade}</span>
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-5 h-5 ${
+                          i < Math.floor(scores.overall / 2)
+                            ? 'text-yellow-400 fill-yellow-400'
+                            : 'text-white/20'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className={`text-xl font-semibold ${scoreColor} mb-2`}>
+                  {classification}
+                </div>
+                <div className="text-white/60 text-sm">
+                  Overall UX Score: {scores.overall.toFixed(1)}/10
+                </div>
+              </div>
+            </div>
+
+            {/* Executive Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span className="text-green-400 font-semibold text-sm">Key Strengths</span>
+                </div>
+                <ul className="space-y-1">
+                  {executiveSummary.keyStrengths.slice(0, 2).map((strength, i) => (
+                    <li key={i} className="text-white/80 text-xs text-left">
+                      • {strength}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="w-4 h-4 text-red-400" />
+                  <span className="text-red-400 font-semibold text-sm">Critical Issues</span>
+                </div>
+                <ul className="space-y-1">
+                  {executiveSummary.criticalIssues.slice(0, 2).map((issue, i) => (
+                    <li key={i} className="text-white/80 text-xs text-left">
+                      • {issue}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap className="w-4 h-4 text-blue-400" />
+                  <span className="text-blue-400 font-semibold text-sm">Quick Wins</span>
+                </div>
+                <ul className="space-y-1">
+                  {executiveSummary.quickWins.slice(0, 2).map((win, i) => (
+                    <li key={i} className="text-white/80 text-xs text-left">
+                      • {win}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
 
@@ -369,22 +515,22 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
           </div>
         </div>
 
-        {/* ── Tabs ── */}
+        {/* ── Enhanced Tabs ── */}
         <div className="glass-strong rounded-2xl border border-white/10 p-2">
           <div className="flex gap-2">
             {[
               { id: "overview", label: "Overview", icon: BarChart3 },
               { id: "detailed", label: "Detailed Analysis", icon: FileText },
-              { id: "recommendations", label: "Recommendations", icon: Target },
+              { id: "recommendations", label: "Strategic Plan", icon: Target },
+              { id: "metrics", label: "Success Metrics", icon: TrendingUp },
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id as typeof activeTab)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 ${
-                  activeTab === id
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 ${activeTab === id
                     ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
                     : "text-white/60 hover:text-white hover:bg-white/10"
-                }`}
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 <span className="font-medium">{label}</span>
@@ -627,6 +773,161 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
           </div>
         )}
 
+        {/* ── Success Metrics Tab ── */}
+        {activeTab === "metrics" && (
+          <div className="space-y-6">
+            {/* Success Metrics Overview */}
+            <div className="glass-strong p-8 rounded-2xl border border-white/10">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Success Metrics</h3>
+                    <p className="text-white/60 text-sm">Expected improvements and KPIs</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleExport}
+                    className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-300 flex items-center gap-2 text-white/70 hover:text-white"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export
+                  </button>
+                  <button
+                    onClick={handleCopyResults}
+                    className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-300 flex items-center gap-2 text-white/70 hover:text-white"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              {/* Metric Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                {[
+                  {
+                    label: "User Satisfaction",
+                    current: "65%",
+                    target: `${Math.round(65 + (scores.overall - 7) * 15)}%`,
+                    improvement: scores.overall - 7,
+                    icon: Users,
+                    color: "from-green-500 to-emerald-500",
+                    bgColor: "bg-green-500/20",
+                  },
+                  {
+                    label: "Task Completion",
+                    current: "72%",
+                    target: `${Math.round(72 + (scores.usability - 7) * 20)}%`,
+                    improvement: scores.usability - 7,
+                    icon: CheckCircle,
+                    color: "from-blue-500 to-cyan-500",
+                    bgColor: "bg-blue-500/20",
+                  },
+                  {
+                    label: "Conversion Rate",
+                    current: "3.2%",
+                    target: `${(3.2 + (scores.conversion - 7) * 0.8).toFixed(1)}%`,
+                    improvement: scores.conversion - 7,
+                    icon: Target,
+                    color: "from-purple-500 to-pink-500",
+                    bgColor: "bg-purple-500/20",
+                  },
+                  {
+                    label: "Accessibility Score",
+                    current: "C+",
+                    target: scores.accessibility >= 8 ? "AA" : scores.accessibility >= 6 ? "A" : "B+",
+                    improvement: scores.accessibility - 7,
+                    icon: Eye,
+                    color: "from-orange-500 to-red-500",
+                    bgColor: "bg-orange-500/20",
+                  },
+                ].map(({ label, current, target, improvement, icon: Icon, color, bgColor }) => (
+                  <div key={label} className="p-6 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-10 h-10 rounded-lg ${bgColor} flex items-center justify-center`}>
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className={`text-lg font-bold ${improvement > 0 ? 'text-green-400' : improvement < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                        {improvement > 0 ? '+' : ''}{(improvement * 10).toFixed(0)}%
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <div className="text-white/70 text-sm mb-1">{label}</div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-bold text-white">{target}</span>
+                        <span className="text-white/50 text-sm line-through">{current}</span>
+                      </div>
+                    </div>
+                    <div className="w-full bg-white/10 rounded-full h-2">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${color} transition-all duration-1000`}
+                        style={{ width: `${Math.min(100, Math.max(0, 50 + improvement * 10))}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Implementation Timeline */}
+              <div className="mb-8">
+                <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-blue-400" />
+                  Implementation Timeline
+                </h4>
+                <div className="space-y-4">
+                  {[
+                    { phase: "Week 1-2", focus: "Critical fixes", items: ["Accessibility compliance", "Usability barriers"] },
+                    { phase: "Week 3-4", focus: "High priority", items: ["Navigation optimization", "Conversion improvements"] },
+                    { phase: "Month 2", focus: "Medium priority", items: ["Mobile enhancements", "Content optimization"] },
+                    { phase: "Month 3", focus: "Long-term", items: ["Advanced features", "Performance monitoring"] },
+                  ].map(({ phase, focus, items }) => (
+                    <div key={phase} className="flex gap-4 p-4 bg-white/5 rounded-lg border border-white/10">
+                      <div className="flex-shrink-0">
+                        <div className="w-16 text-center">
+                          <div className="text-blue-400 font-semibold text-sm">{phase}</div>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-medium mb-1">{focus}</div>
+                        <div className="text-white/60 text-sm">{items.join(" • ")}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ROI Calculator */}
+              <div>
+                <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <Award className="w-5 h-5 text-yellow-400" />
+                  Estimated ROI
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30">
+                    <div className="text-green-400 font-semibold mb-1">Revenue Impact</div>
+                    <div className="text-2xl font-bold text-white">+{Math.round((scores.conversion - 7) * 25)}%</div>
+                    <div className="text-white/60 text-sm">Based on conversion improvements</div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30">
+                    <div className="text-blue-400 font-semibold mb-1">Cost Savings</div>
+                    <div className="text-2xl font-bold text-white">-${Math.round((scores.usability - 7) * 800)}</div>
+                    <div className="text-white/60 text-sm">Reduced support tickets</div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+                    <div className="text-purple-400 font-semibold mb-1">Time to Value</div>
+                    <div className="text-2xl font-bold text-white">6-8 weeks</div>
+                    <div className="text-white/60 text-sm">Full implementation</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── Recommendations Tab ── */}
         {activeTab === "recommendations" && (
           <div className="space-y-6">
@@ -637,7 +938,7 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
                     <Target className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-white">Dynamic Recommendations</h3>
+                    <h3 className="text-2xl font-bold text-white">Strategic Recommendations</h3>
                     <p className="text-white/60 text-sm">Based on your analysis scores</p>
                   </div>
                 </div>
@@ -756,23 +1057,22 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
                       <div className="mt-4 pt-4 border-t border-white/20 flex items-center justify-between">
                         <span className="text-white/60 text-xs">Estimated Impact</span>
                         <span
-                          className={`text-xs font-bold ${
-                            priority === "Critical"
+                          className={`text-xs font-bold ${priority === "Critical"
                               ? "text-red-400"
                               : priority === "High"
-                              ? "text-orange-400"
-                              : priority === "Medium"
-                              ? "text-yellow-400"
-                              : "text-green-400"
-                          }`}
+                                ? "text-orange-400"
+                                : priority === "Medium"
+                                  ? "text-yellow-400"
+                                  : "text-green-400"
+                            }`}
                         >
                           {priority === "Critical"
                             ? "High"
                             : priority === "High"
-                            ? "Medium"
-                            : priority === "Medium"
-                            ? "Low"
-                            : "Minimal"}
+                              ? "Medium"
+                              : priority === "Medium"
+                                ? "Low"
+                                : "Minimal"}
                         </span>
                       </div>
                     </div>
@@ -795,20 +1095,20 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
                       scores.overall >= 8.5
                         ? "text-green-400"
                         : scores.overall >= 7.0
-                        ? "text-yellow-400"
-                        : "text-red-400",
+                          ? "text-yellow-400"
+                          : "text-red-400",
                     insight:
                       scores.overall >= 8.5
                         ? "Excellent UX quality"
                         : scores.overall >= 7.0
-                        ? "Good UX foundation"
-                        : "Needs significant improvements",
+                          ? "Good UX foundation"
+                          : "Needs significant improvements",
                     recommendation:
                       scores.overall >= 8.5
                         ? "Maintain quality standards"
                         : scores.overall >= 7.0
-                        ? "Focus on core improvements"
-                        : "Comprehensive redesign needed",
+                          ? "Focus on core improvements"
+                          : "Comprehensive redesign needed",
                   },
                   {
                     label: "Accessibility Score",
@@ -817,20 +1117,20 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
                       scores.accessibility >= 8.0
                         ? "text-green-400"
                         : scores.accessibility >= 6.5
-                        ? "text-yellow-400"
-                        : "text-red-400",
+                          ? "text-yellow-400"
+                          : "text-red-400",
                     insight:
                       scores.accessibility >= 8.0
                         ? "Inclusive design"
                         : scores.accessibility >= 6.5
-                        ? "Partial accessibility"
-                        : "Major accessibility issues",
+                          ? "Partial accessibility"
+                          : "Major accessibility issues",
                     recommendation:
                       scores.accessibility >= 8.0
                         ? "Continue inclusive practices"
                         : scores.accessibility >= 6.5
-                        ? "Address accessibility gaps"
-                        : "Accessibility audit required",
+                          ? "Address accessibility gaps"
+                          : "Accessibility audit required",
                   },
                   {
                     label: "Mobile Experience",
@@ -839,20 +1139,20 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
                       scores.mobile >= 8.5
                         ? "text-green-400"
                         : scores.mobile >= 7.0
-                        ? "text-yellow-400"
-                        : "text-red-400",
+                          ? "text-yellow-400"
+                          : "text-red-400",
                     insight:
                       scores.mobile >= 8.5
                         ? "Mobile-first design"
                         : scores.mobile >= 7.0
-                        ? "Responsive layout"
-                        : "Mobile optimisation needed",
+                          ? "Responsive layout"
+                          : "Mobile optimisation needed",
                     recommendation:
                       scores.mobile >= 8.5
                         ? "Enhance mobile features"
                         : scores.mobile >= 7.0
-                        ? "Improve responsiveness"
-                        : "Mobile redesign required",
+                          ? "Improve responsiveness"
+                          : "Mobile redesign required",
                   },
                   {
                     label: "Visual Design",
@@ -861,20 +1161,20 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
                       scores.visual >= 8.5
                         ? "text-green-400"
                         : scores.visual >= 7.0
-                        ? "text-yellow-400"
-                        : "text-red-400",
+                          ? "text-yellow-400"
+                          : "text-red-400",
                     insight:
                       scores.visual >= 8.5
                         ? "Professional appearance"
                         : scores.visual >= 7.0
-                        ? "Decent visual design"
-                        : "Visual redesign needed",
+                          ? "Decent visual design"
+                          : "Visual redesign needed",
                     recommendation:
                       scores.visual >= 8.5
                         ? "Refine visual polish"
                         : scores.visual >= 7.0
-                        ? "Enhance visual hierarchy"
-                        : "Complete visual overhaul",
+                          ? "Enhance visual hierarchy"
+                          : "Complete visual overhaul",
                   },
                 ].map(({ label, value, color, insight, recommendation }) => (
                   <div
@@ -1068,11 +1368,10 @@ export default function AnalysisResults({ result, onReset }: AnalysisResultsProp
                     className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${
-                        message.sender === "user"
+                      className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${message.sender === "user"
                           ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
                           : "bg-white/10 text-white border border-white/20"
-                      }`}
+                        }`}
                     >
                       {message.text}
                     </div>

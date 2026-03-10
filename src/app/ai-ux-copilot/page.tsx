@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Upload, Link, Globe, ArrowRight, Loader2, X } from "lucide-react";
 import AnalysisResults from "@/components/AnalysisResults";
+import LoadingAnimation from "@/components/LoadingAnimation";
 
 interface AnalysisResult {
   success: boolean;
@@ -121,6 +122,14 @@ export default function AIUXCopilotPage() {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  // Handle Enter key submission
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter" && !isSubmitDisabled && !isSubmitting) {
+      event.preventDefault();
+      handleSubmit();
+    }
+  };
+
   const handleSubmit = async () => {
     if (!inputType) return;
 
@@ -141,16 +150,19 @@ export default function AIUXCopilotPage() {
           }),
         });
       } else {
-        // Route to Gemini API for screenshots or Figma
+        // Route to OpenAI API for screenshots or Figma
+        const formData = new FormData();
+        if (inputType === "figma") {
+          formData.append('figmaUrl', figmaUrl);
+        } else if (inputType === "screenshots") {
+          uploadedFiles.forEach(file => {
+            formData.append('files', file);
+          });
+        }
+        
         response = await fetch("/api/analyze-design", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            figmaUrl: inputType === "figma" ? figmaUrl : null,
-            screenshotFiles: inputType === "screenshots" ? uploadedFiles.map(f => f.name) : [],
-          }),
+          body: formData,
         });
       }
 
@@ -218,17 +230,27 @@ export default function AIUXCopilotPage() {
   return (
     <div className="min-h-screen pt-24 p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-6">
-          AI UX <span className="gradient-text">Copilot</span>
-        </h1>
-        <p className="text-white/60 text-lg mb-12">
-          Your intelligent companion for making better UX decisions with real-time AI guidance and recommendations.
+        {/* Show Loading Animation when submitting */}
+        {isSubmitting && (
+          <LoadingAnimation 
+            analysisType={inputType || "domain"} 
+          />
+        )}
+
+        {/* Show main content when not submitting */}
+        {!isSubmitting && (
+          <>
+            <h1 className="text-4xl font-bold text-white mb-6">
+              AI UX <span className="gradient-text">Copilot</span>
+            </h1>
+            <p className="text-white/60 text-lg mb-12">
+              Your intelligent companion for making better UX decisions with real-time AI guidance and recommendations.
         </p>
         
         {analysisResult ? (
           <AnalysisResults result={analysisResult} onReset={handleReset} />
         ) : (
-          <div className="glass-strong p-8 rounded-2xl border border-white/10">
+          <div className="glass-strong p-8 rounded-2xl border border-white/10" onKeyDown={handleKeyDown}>
             {!inputType ? (
               // Show option cards when nothing is selected
               <>
@@ -308,6 +330,7 @@ export default function AIUXCopilotPage() {
                         placeholder="https://example.com"
                         value={domainUrl}
                         onChange={(e) => handleDomainUrlChange(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         className={`w-full p-4 rounded-lg bg-white/5 border text-white placeholder-white/40 focus:outline-none transition-colors ${
                           domainUrlError 
                             ? "border-red-500 focus:border-red-500" 
@@ -428,6 +451,7 @@ export default function AIUXCopilotPage() {
                         placeholder="https://www.figma.com/file/..."
                         value={figmaUrl}
                         onChange={(e) => handleFigmaUrlChange(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         className={`w-full p-4 rounded-lg bg-white/5 border text-white placeholder-white/40 focus:outline-none transition-colors ${
                           figmaUrlError 
                             ? "border-red-500 focus:border-red-500" 
@@ -473,6 +497,8 @@ export default function AIUXCopilotPage() {
               </>
             )}
           </div>
+        )}
+          </>
         )}
       </div>
     </div>
