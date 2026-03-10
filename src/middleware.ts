@@ -4,22 +4,22 @@ import { createServerClient } from "@supabase/ssr";
 import { generalApiLimiter } from "@/utils/rate-limit";
 
 const PUBLIC_PATHS = [
-  "/", 
-  "/pricing", 
-  "/login", 
-  "/signup", 
-  "/forgot-password", 
-  "/feedback",
-  "/ai-ux-copilot",
-  "/ai-redesign-engine",
-  "/heatmap-prediction",
-  "/conversion-simulator",
-  "/ux-benchmark",
-  "/pattern-recognition",
-  "/design-system-generator",
-  "/behavior-analytics",
-  "/prd-generator",
-  "/developer-mode"
+    "/",
+    "/pricing",
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/feedback",
+    "/ai-ux-copilot",
+    "/ai-redesign-engine",
+    "/heatmap-prediction",
+    "/conversion-simulator",
+    "/ux-benchmark",
+    "/pattern-recognition",
+    "/design-system-generator",
+    "/behavior-analytics",
+    "/prd-generator",
+    "/developer-mode"
 ];
 const AUTH_PATHS = ["/login", "/signup", "/forgot-password"];
 
@@ -55,8 +55,8 @@ export async function middleware(request: NextRequest) {
     }
 
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co",
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy_key",
         {
             cookies: {
                 getAll() {

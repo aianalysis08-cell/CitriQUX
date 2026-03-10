@@ -1,10 +1,11 @@
-"use client";
-
 import React from "react";
+import dynamic from "next/dynamic";
 import { Hero } from "@/components/landing/Hero";
-import { Features } from "@/components/landing/Features";
-import { Pricing } from "@/components/landing/Pricing";
 import { SECTION_SPACING } from "@/config/spacing";
+
+// Dynamically import heavy interactive components (Framer Motion, Auth State) below the fold
+const Features = dynamic(() => import("@/components/landing/Features").then(mod => mod.Features));
+const Pricing = dynamic(() => import("@/components/landing/Pricing").then(mod => mod.Pricing));
 
 export default function LandingPage() {
   return (
